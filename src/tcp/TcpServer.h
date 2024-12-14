@@ -13,6 +13,7 @@ public slots:
     void stopServer();
 
 protected:
+    QList<QTcpSocket *> m_clients;
     void incomingConnection(qintptr socketDescriptor) override;
 protected slots:
     void onClientDisconnected();

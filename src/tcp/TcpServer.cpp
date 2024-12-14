@@ -21,6 +21,11 @@ void TcpServer::startServer(quint16 port)
 
 void TcpServer::stopServer()
 {
+    for (QTcpSocket *client : m_clients)
+    {
+        client->disconnectFromHost();
+        client->deleteLater();
+    }
     close();
     emit tip(QObject::tr("Server stopped"));
 }
@@ -28,8 +33,10 @@ void TcpServer::stopServer()
 void TcpServer::incomingConnection(qintptr socketDescriptor)
 {
     QTcpSocket *clientSocket = new QTcpSocket(this);
+
     if (clientSocket->setSocketDescriptor(socketDescriptor))
     {
+        m_clients.append(clientSocket);
         emit tip(QObject::tr("New client connected: ").append(clientSocket->peerAddress().toString()).append(QStringLiteral(":")).append(QString::number(clientSocket->peerPort())));
 
         // 连接信号槽
@@ -50,6 +57,7 @@ void TcpServer::onClientDisconnected()
         emit tip(QObject::tr("Client disconnected: ").append(clientSocket->peerAddress().toString()).append(QStringLiteral(":")).append(QString::number(clientSocket->peerPort())));
         disconnect(clientSocket, &QTcpSocket::readyRead, this, &TcpServer::onClientReadyRead);
         disconnect(clientSocket, &QTcpSocket::disconnected, this, &TcpServer::onClientDisconnected);
+        m_clients.removeAll(clientSocket);
         clientSocket->deleteLater();
     }
 }

@@ -10,8 +10,6 @@ NetTest is a network testing tool that supports TCP, UDP, and WebSocket protocol
 
 ## TODO
 
-- **TCP server cannot be closed**
-
 ---
 
 # NetTest
@@ -25,5 +23,3 @@ NetTest 是一个支持 TCP、UDP 和 WebSocket 协议的网络测试工具。
 - **WebSocket 支持**：测试和调试 WebSocket 连接。
 
 ## TODO
-
-- **TCP 服务端无法关闭**
