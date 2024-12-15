@@ -48,9 +48,9 @@ jobs:
 
     - name: Build
       run: |
-        cmake --build ${{github.workspace}}/build --config Release --parallel
+        cmake --build ${{github.workspace}}/build --config ${{ env.BUILD_TYPE }} --parallel
 
-    - name: Package
+    - name: Package (Windows Only)
       if: matrix.os == 'windows-latest'
       run: |
         tree ${{github.workspace}}
@@ -61,7 +61,7 @@ jobs:
     - name: Compress (Windows Only)
       if: matrix.os == 'windows-latest'
       run: |
-        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest.7z release_package
+        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z release_package
 
     - name: Upload executable (Windows Only)
       if: matrix.os == 'windows-latest'
@@ -71,18 +71,39 @@ jobs:
         path: build/Release/NetTest.exe
         compression-level: 0
 
-    - name: Upload package (Windows Only)
-      if: matrix.os == 'windows-latest'
+    - name: Upload build artifacts (Windows)
       uses: actions/upload-artifact@v4
       with:
         name: NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
-        path: NetTest.7z
+        path: NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
         compression-level: 0
+
+    - name: Release Package (Windows Only)
+      if: matrix.os == 'windows-latest' && startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
+          NetTest.exe
+        generate_release_notes: true
+
+    - name: Compress (Linux/macOS)
+      if: matrix.os != 'windows-latest'
+      run: |
+        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z build/bin
 
     - name: Upload build artifacts (Linux/macOS)
       if: matrix.os != 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
         name: NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}
-        path: build/bin
+        path: NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
         compression-level: 0
+
+    - name: Release Package (Linux/macOS)
+      if: matrix.os != 'windows-latest' && startsWith(github.ref, 'refs/tags/')
+      uses: softprops/action-gh-release@v2
+      with:
+        files: |
+          NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
+        generate_release_notes: true
