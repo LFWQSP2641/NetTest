@@ -222,7 +222,7 @@
     <message>
         <location filename="../page/MainPage.qml" line="57"/>
         <source>TCP Client</source>
-        <translation>WebSocket 服务端</translation>
+        <translation>TCP 客户端</translation>
     </message>
     <message>
         <location filename="../page/MainPage.qml" line="69"/>
