@@ -13,14 +13,14 @@ public:
     ~DnsQuery();
 
 public slots:
-    void query(const QString &domain, const QHostAddress &dnsServer = QHostAddress::LocalHost, quint16 port = 53);
+    void query(const QString &domain, const QString &dnsServer = QStringLiteral("1.1.1.1"), quint16 port = 53);
 
 protected slots:
     void onReadyRead();
 
 protected:
     QUdpSocket *m_socket;
-    QHostAddress m_dnsServer;
+    QString m_dnsServer;
     quint16 m_port;
     QString m_domain;
     quint64 m_startTime;

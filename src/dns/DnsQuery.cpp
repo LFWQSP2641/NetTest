@@ -20,13 +20,20 @@ DnsQuery::~DnsQuery()
     }
 }
 
-void DnsQuery::query(const QString &domain, const QHostAddress &dnsServer, quint16 port)
+void DnsQuery::query(const QString &domain, const QString &dnsServer, quint16 port)
 {
-    m_dnsServer = dnsServer;
     m_port = port;
     m_domain = domain;
     m_startTime = QDateTime::currentMSecsSinceEpoch();
-    m_socket->connectToHost(dnsServer, port);
+    if (dnsServer != m_dnsServer)
+    {
+        if (!m_dnsServer.isEmpty())
+        {
+            m_socket->close();
+        }
+        m_socket->connectToHost(dnsServer, port);
+        m_dnsServer = dnsServer;
+    }
     m_socket->write(DnsParser::createDnsQueryPacket(domain));
 }
 
@@ -43,6 +50,6 @@ void DnsQuery::onReadyRead()
         m_socket->readDatagram(data.data(), data.size(), &sender, &senderPort);
         emit tip(QObject::tr("Received data from ").append(sender.toString()).append(QStringLiteral(":")).append(QString::number(senderPort)));
         emit receivedData(data);
-        emit lookupFinished(m_domain, DnsParser::parseDnsResponsePacket(data), elapsedTime);
+        emit lookupFinished(m_domain, DnsParser::parseDnsResponsePacket(data).answers.first().value, elapsedTime);
     }
 }

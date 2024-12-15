@@ -1,215 +1,102 @@
-pragma ComponentBehavior: Bound
-
 import QtQuick
 import QtQuick.Layouts
-import NetTest
 
 Item {
     id: mainPage
-    required property var stackViewObject
-    RowLayout {
+    signal clicked(int id)
+    GridLayout {
         anchors.fill: parent
 
-        // 左侧是服务器
-        ColumnLayout {
+        rows: 3
+        columns: 2
+        rowSpacing: 10
+        columnSpacing: 10
+
+        // TCP服务器
+        TextAreaButton {
+            Layout.row: 0
+            Layout.column: 0
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // TCP服务器
-            TextAreaButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                title: qsTr("TCP Server")
-                function clickFunction() {
-                    mainPage.stackViewObject.push(tcpServerComponent)
-                }
-            }
-
-            // UDP服务器
-            TextAreaButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                title: qsTr("UDP Server")
-                function clickFunction() {
-                    mainPage.stackViewObject.push(udpServerComponent)
-                }
-            }
-
-            // WebSocket服务器
-            TextAreaButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                title: qsTr("WebSocket Server")
-                function clickFunction() {
-                    mainPage.stackViewObject.push(webSocketServerComponent)
-                }
+            title: qsTr("TCP Server")
+            function clickFunction() {
+                mainPage.clicked(1)
             }
         }
 
-        // 右侧是客户端
-        ColumnLayout {
+        // UDP服务器
+        TextAreaButton {
+            Layout.row: 1
+            Layout.column: 0
             Layout.fillWidth: true
             Layout.fillHeight: true
-            // TCP客户端
-            TextAreaButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                title: qsTr("TCP Client")
-                function clickFunction() {
-                    mainPage.stackViewObject.push(tcpClientComponent)
-                }
+            title: qsTr("UDP Server")
+            function clickFunction() {
+                mainPage.clicked(2)
             }
+        }
 
-            // UDP客户端
-            TextAreaButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                title: qsTr("UDP Client")
-                function clickFunction() {
-                    mainPage.stackViewObject.push(udpClientComponent)
-                }
+        // WebSocket服务器
+        TextAreaButton {
+            Layout.row: 2
+            Layout.column: 0
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            title: qsTr("WebSocket Server")
+            function clickFunction() {
+                mainPage.clicked(3)
             }
+        }
 
-            // WebSocket客户端
-            TextAreaButton {
-                Layout.fillWidth: true
-                Layout.fillHeight: true
-                title: qsTr("WebSocket Client")
-                function clickFunction() {
-                    mainPage.stackViewObject.push(webSocketClientComponent)
-                }
+        // TCP客户端
+        TextAreaButton {
+            Layout.row: 0
+            Layout.column: 1
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            title: qsTr("TCP Client")
+            function clickFunction() {
+                mainPage.clicked(4)
             }
         }
-    }
-    Component {
-        id: tcpServerComponent
-        ServerPage {
-            id: tcpServer
-            serverObject: TcpServer {
-                onError: function(error) {
-                    console.log("TCP Server Error: " + error)
-                    tcpServer.outputErrorMessage(error)
-                }
-                onTip: function(tip) {
-                    console.log("TCP Server Tip: " + tip)
-                    tcpServer.outputTipMessage(tip)
-                }
-                onReceivedData: function(str, hexEncode) {
-                    console.log("TCP Server Received: " + str + "\n"
-                                + hexEncode)
-                    tcpServer.outputReceivedMessage(str + "\n" + qsTr("hex encode: ") + hexEncode)
-                }
+
+        // UDP客户端
+        TextAreaButton {
+            Layout.row: 1
+            Layout.column: 1
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            title: qsTr("UDP Client")
+            function clickFunction() {
+                mainPage.clicked(5)
             }
-            type: "TCP"
         }
-    }
-    Component {
-        id: udpServerComponent
-        ServerPage {
-            id: udpServer
-            serverObject: UdpServer {
-                onError: function(error) {
-                    console.log("UDP Server Error: " + error)
-                    udpServer.outputErrorMessage(error)
-                }
-                onTip: function(tip) {
-                    console.log("UDP Server Tip: " + tip)
-                    udpServer.outputTipMessage(tip)
-                }
-                onReceivedData: function(str, hexEncode) {
-                    console.log("UDP Server Received: " + str + "\n"
-                                + hexEncode)
-                    udpServer.outputReceivedMessage(str + "\n" + qsTr("hex encode: ") + hexEncode)
-                }
+
+        // WebSocket客户端
+        TextAreaButton {
+            Layout.row: 2
+            Layout.column: 1
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            title: qsTr("WebSocket Client")
+            function clickFunction() {
+                mainPage.clicked(6)
             }
-            type: "UDP"
         }
-    }
-    Component {
-        id: webSocketServerComponent
-        ServerPage {
-            id: webSocketServer
-            serverObject: WebSocketServer {
-                onError: function(error) {
-                    console.log("WebSocket Server Error: " + error)
-                    webSocketServer.outputErrorMessage(error)
-                }
-                onTip: function(tip) {
-                    console.log("WebSocket Server Tip: " + tip)
-                    webSocketServer.outputTipMessage(tip)
-                }
-                onReceivedData: function(str, hexEncode) {
-                    console.log("WebSocket Server Received: " + str + "\n"
-                                + hexEncode)
-                    webSocketServer.outputReceivedMessage(str + "\n" + qsTr("hex encode: ") + hexEncode)
-                }
+
+        // DNS查询
+        TextAreaButton {
+            Layout.row: 3
+            Layout.column: 0
+            Layout.columnSpan: 2
+            Layout.fillWidth: true
+            Layout.fillHeight: true
+            title: qsTr("DNS Query")
+            // 目前仅支持A记录
+            description: qsTr("Currently only supports A records")
+            function clickFunction() {
+                mainPage.clicked(7)
             }
-            type: "WebSocket"
-        }
-    }
-    Component {
-        id: tcpClientComponent
-        ClientPage {
-            id: tcpClient
-            clientObject: TcpClient {
-                onError: function(error) {
-                    console.log("TCP Client Error: " + error)
-                    tcpClient.outputErrorMessage(error)
-                }
-                onTip: function(tip) {
-                    console.log("TCP Client Tip: " + tip)
-                    tcpClient.outputTipMessage(tip)
-                }
-                onReceivedData: function(str, hexEncode) {
-                    console.log("TCP Client Received: " + str + "\n"
-                                + hexEncode)
-                    tcpClient.outputReceivedMessage(str + "\n" + qsTr("hex encode: ") + hexEncode)
-                }
-            }
-            type: "TCP"
-        }
-    }
-    Component {
-        id: udpClientComponent
-        ClientPage {
-            id: udpClient
-            clientObject: UdpClient {
-                onError: function(error) {
-                    console.log("Udp Client Error: " + error)
-                    udpClient.outputErrorMessage(error)
-                }
-                onTip: function(tip) {
-                    console.log("Udp Client Tip: " + tip)
-                    udpClient.outputTipMessage(tip)
-                }
-                onReceivedData: function(str, hexEncode) {
-                    console.log("UDP Client Received: " + str + "\n"
-                                + hexEncode)
-                    udpClient.outputReceivedMessage(str + "\n" + qsTr("hex encode: ") + hexEncode)
-                }
-            }
-            type: "UDP"
-        }
-    }
-    Component {
-        id: webSocketClientComponent
-        ClientPage {
-            id: webSocketClient
-            clientObject: WebSocketClient {
-                onError: function(error) {
-                    console.log("WebSocket Client Error: " + error)
-                    webSocketClient.outputErrorMessage(error)
-                }
-                onTip: function(tip) {
-                    console.log("WebSocket Client Tip: " + tip)
-                    webSocketClient.outputTipMessage(tip)
-                }
-                onReceivedData: function(str, hexEncode) {
-                    console.log("WebSocket Client Received: " + str + "\n"
-                                + hexEncode)
-                    webSocketClient.outputReceivedMessage(str + "\n" + qsTr("hex encode: ") + hexEncode)
-                }
-            }
-            type: "WebSocket"
         }
     }
 }

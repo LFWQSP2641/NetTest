@@ -5,7 +5,7 @@ import QtQuick.Layouts
 Item {
     id: serverPage
 
-    property var serverObject: null
+    required property var serverObject
     property string type: ""
 
     ColumnLayout {
@@ -99,5 +99,22 @@ Item {
     function outputReceivedMessage(message)
     {
         serverTextArea.log(qsTr("Received:") + message)
+    }
+
+    Connections {
+        target: serverPage.serverObject
+        function onError(error) {
+            console.log(serverPage.type + " Server Error: " + error)
+            serverPage.outputErrorMessage(error)
+        }
+        function onTip(tip) {
+            console.log(serverPage.type + " Server Tip: " + tip)
+            serverPage.outputTipMessage(tip)
+        }
+        function onReceivedData(str, hexEncode) {
+            let message = str + "\n" + qsTr("hex encode: ") + hexEncode
+            console.log(serverPage.type + " Server Received: " + message)
+            serverPage.outputReceivedMessage(message)
+        }
     }
 }

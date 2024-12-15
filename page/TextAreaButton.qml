@@ -41,7 +41,7 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         onClicked: {
-            console.log("Clicked" + root.title)
+            console.log("Clicked " + root.title)
             root.clickFunction()
         }
     }

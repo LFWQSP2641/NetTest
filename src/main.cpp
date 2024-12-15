@@ -1,3 +1,5 @@
+#include "src/Global.h"
+#include "src/Settings.h"
 #include "src/WebSocket/WebSocketClient.h"
 #include "src/WebSocket/WebSocketServer.h"
 #include "src/dns/DnsQuery.h"
@@ -6,14 +8,66 @@
 #include "src/udp/UdpClient.h"
 #include "src/udp/UdpServer.h"
 
+#include <QFont>
 #include <QGuiApplication>
 #include <QNetworkProxy>
 #include <QQmlApplicationEngine>
+#include <QQuickStyle>
+#include <QTranslator>
 
 int main(int argc, char *argv[])
 {
     QGuiApplication app(argc, argv);
+
+    Global::initOnce();
+    Settings::initOnce();
+    auto settings(Settings::getInstance());
+
+    QFont appFont;
+    if (settings->fontPointSize() < 1 || settings->font().isEmpty())
+    {
+        settings->setFontPointSize(app.font().pointSize());
+        settings->setFont(app.font().family());
+        settings->saveSettings();
+    }
+    else
+    {
+        appFont.setFamily(settings->font());
+        appFont.setPointSize(settings->fontPointSize());
+        app.setFont(appFont);
+    }
+
+    if (qEnvironmentVariableIsEmpty("QT_QUICK_CONTROLS_STYLE"))
+        QQuickStyle::setStyle(settings->style());
+
+    // If this is the first time we're running the application,
+    // we need to set a style in the settings so that the QML
+    // can find it in the list of built-in styles.
+    if (settings->style().isEmpty())
+        settings->setStyle(QQuickStyle::name());
+
     QNetworkProxyFactory::setUseSystemConfiguration(false);
+
+    // 获取系统语言
+    QString systemLanguage = QLocale::system().name();
+    qDebug() << "System Language:" << systemLanguage;
+
+    // 创建翻译器
+    QTranslator *translator = new QTranslator;
+
+    // 如果语言是中文
+    if (systemLanguage == QStringLiteral("zh_CN"))
+    {
+        bool loaded = translator->load(":/NetTest_zh_CN.qm");
+        qDebug() << "Translation loaded:" << loaded;
+
+        if (loaded)
+        {
+            app.installTranslator(translator);
+        }
+    }
+
+    qmlRegisterSingletonInstance("NetTest", 1, 0, "Settings", settings);
 
     qmlRegisterType<TcpClient>("NetTest", 1, 0, "TcpClient");
     qmlRegisterType<TcpServer>("NetTest", 1, 0, "TcpServer");

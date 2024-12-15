@@ -1,91 +1,95 @@
 #include "DnsParser.h"
 
 #include <QDebug>
+#include <QHostAddress>
 #include <QObject>
 #include <QRandomGenerator>
 #include <QUrl>
 
-QString DnsParser::parseDnsResponsePacket(const QByteArray &data)
+DnsResponse DnsParser::parseDnsResponsePacket(const QByteArray &data)
 {
+    DnsResponse response;
+
     if (data.size() < 12)
     {
-        return QObject::tr("Invalid DNS response packet");
+        response.transactionId = QObject::tr("Invalid DNS response packet");
+        return response;
     }
 
-    // Read header fields
-    quint16 transactionId = readUInt16(data, 0);
-    quint16 flags = readUInt16(data, 2);
+    // 读取头部字段
+    response.transactionId = QString::number(readUInt16(data, 0));
+    response.flags = QString("%1").arg(readUInt16(data, 2), 4, 16, QLatin1Char('0'));
     quint16 questions = readUInt16(data, 4);
     quint16 answerRRs = readUInt16(data, 6);
-    quint16 authorityRRs = readUInt16(data, 8);
-    quint16 additionalRRs = readUInt16(data, 10);
 
-    QString result = QObject::tr("Transaction ID: %1\n"
-                                 "Flags: %2\n"
-                                 "Questions: %3\n"
-                                 "Answer RRs: %4\n"
-                                 "Authority RRs: %5\n"
-                                 "Additional RRs: %6\n")
-                         .arg(transactionId)
-                         .arg(flags, 4, 16, QLatin1Char('0'))
-                         .arg(questions)
-                         .arg(answerRRs)
-                         .arg(authorityRRs)
-                         .arg(additionalRRs);
-
-    // Simple parsing of question section
+    // 解析问题部分
     int pos = 12;
     for (int i = 0; i < questions; ++i)
     {
-        if (pos >= data.size())
-        {
-            return QObject::tr("Malformed DNS response packet: Question section truncated"); // 更具体的错误信息
-        }
-
         QString domainName;
         while (true)
         {
             if (pos >= data.size())
-            {
-                return QObject::tr("Malformed DNS response packet: Domain name truncated");
-            }
+                return response;
+
             quint8 length = static_cast<quint8>(data[pos]);
             pos++;
-
             if (length == 0)
-            {
                 break;
-            }
-            else if ((length & 0xC0) == 0xC0)
-            { // 检查是否为压缩指针
-                // TODO: 实现压缩指针的处理
-                return QObject::tr("DNS message compression is not supported yet.");
+
+            if ((length & 0xC0) == 0xC0)
+            {
+                quint16 pointer = ((length & 0x3F) << 8) | static_cast<quint8>(data[pos]);
+                pos++;
+                // 在需要时实现指针解压
+                domainName += QObject::tr("Compression not supported");
+                break;
             }
             else
             {
-                if (pos + length > data.size())
-                {
-                    return QObject::tr("Malformed DNS response packet: Domain label truncated");
-                }
                 domainName.append(QString::fromLatin1(data.mid(pos, length)));
                 domainName.append(".");
                 pos += length;
             }
         }
-        domainName.chop(1);
+        domainName.chop(1); // 移除最后的点
+        response.questions.append(domainName);
 
         if (pos + 4 > data.size())
-        {
-            return QObject::tr("Malformed DNS response packet: Question type/class truncated");
-        }
-        pos += 4;
-
-        result += QObject::tr("Question %1: Domain Name: %2\n").arg(i + 1).arg(domainName);
+            return response;
+        pos += 4; // 跳过类型和类
     }
 
-    // Additional parsing can be added here for answers, authorities, etc.
+    // 解析回答部分
+    for (int i = 0; i < answerRRs; ++i)
+    {
+        if (pos + 12 > data.size())
+            return response;
 
-    return result;
+        QString domainName = QObject::tr("Compressed or raw domain");
+        quint16 type = readUInt16(data, pos + 2);
+        quint16 dataLength = readUInt16(data, pos + 10);
+        pos += 12;
+
+        if (type == 1 && dataLength == 4) // IPv4 地址
+        {
+            QByteArray rawIpData = data.mid(pos, dataLength);
+            QString ipv4Address = QString("%1.%2.%3.%4")
+                                      .arg(static_cast<quint8>(rawIpData[0]))
+                                      .arg(static_cast<quint8>(rawIpData[1]))
+                                      .arg(static_cast<quint8>(rawIpData[2]))
+                                      .arg(static_cast<quint8>(rawIpData[3]));
+            response.answers.append({ domainName, "A", ipv4Address });
+        }
+        else
+        {
+            response.answers.append({ domainName, QString("Type %1").arg(type), QObject::tr("Unsupported or invalid") });
+        }
+
+        pos += dataLength;
+    }
+
+    return response;
 }
 
 QByteArray DnsParser::createDnsQueryPacket(const QString &domain)
@@ -139,10 +143,23 @@ quint16 DnsParser::readUInt16(const QByteArray &data, int offset)
 {
     if (offset + 1 >= data.size())
     {
-        qWarning() << QObject::tr("Offset out of bounds");
+        qWarning() << QObject::tr("readUInt16: Offset out of bounds");
         return 0;
     }
     return (static_cast<quint16>(data[offset]) << 8) | static_cast<quint16>(data[offset + 1]);
+}
+
+quint16 DnsParser::readUInt32(const QByteArray &data, int offset)
+{
+    if (offset + 4 > data.size())
+    {
+        qWarning() << QObject::tr("readUInt32: Offset out of bounds");
+        return 0;
+    }
+    return (static_cast<quint32>(static_cast<quint8>(data[offset])) << 24) |
+           (static_cast<quint32>(static_cast<quint8>(data[offset + 1])) << 16) |
+           (static_cast<quint32>(static_cast<quint8>(data[offset + 2])) << 8) |
+           static_cast<quint32>(static_cast<quint8>(data[offset + 3]));
 }
 
 bool DnsParser::writeQName(QDataStream &stream, const QString &domain)
