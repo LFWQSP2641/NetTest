@@ -50,6 +50,7 @@ void DnsQuery::onReadyRead()
         m_socket->readDatagram(data.data(), data.size(), &sender, &senderPort);
         emit tip(QObject::tr("Received data from ").append(sender.toString()).append(QStringLiteral(":")).append(QString::number(senderPort)));
         emit receivedData(data);
-        emit lookupFinished(m_domain, DnsParser::parseDnsResponsePacket(data).answers.first().value, elapsedTime);
+        const auto response = DnsParser::parseDnsResponsePacket(data);
+        emit lookupFinished(m_domain, response.answers.isEmpty() ? "" : response.answers.first().value, elapsedTime);
     }
 }
