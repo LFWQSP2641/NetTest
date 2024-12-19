@@ -5,6 +5,8 @@ on: push
 env:
   BUILD_TYPE: Release
   QT_VERSION: '6.8.*'
+  PROJECT_NAME: NetTest
+  EXECUTABLE_NAME: NetTest
 
 permissions:
   contents: write
@@ -57,30 +59,30 @@ jobs:
       if: matrix.os == 'windows-latest'
       run: |
         mkdir -p release_package
-        cp build/Release/NetTest.exe release_package/
-        windeployqt --qmldir . release_package/NetTest.exe
+        cp build/Release/${{ env.EXECUTABLE_NAME }}.exe release_package/
+        windeployqt --qmldir . release_package/${{ env.EXECUTABLE_NAME }}.exe
       shell: bash
 
     - name: Compress (Windows Only)
       if: matrix.os == 'windows-latest'
       run: |
-        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z release_package
+        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on ${{ env.PROJECT_NAME }}_${{ matrix.qt_host }}_${{ matrix.arch }}.7z release_package
       shell: bash
 
     - name: Upload executable (Windows Only)
       if: matrix.os == 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: NetTest.exe
-        path: build/Release/NetTest.exe
+        name: ${{ env.EXECUTABLE_NAME }}.exe
+        path: build/Release/${{ env.EXECUTABLE_NAME }}.exe
         compression-level: 0
 
     - name: Upload build artifacts (Windows)
       if: matrix.os == 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
-        path: NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
+        name: ${{ env.PROJECT_NAME }}_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
+        path: ${{ env.PROJECT_NAME }}_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
         compression-level: 0
 
     - name: Release Package (Windows Only)
@@ -88,21 +90,21 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          ${{github.workspace}}/NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
-          ${{github.workspace}}/build/Release/NetTest.exe
+          ${{github.workspace}}/${{ env.PROJECT_NAME }}_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
+          ${{github.workspace}}/build/Release/${{ env.EXECUTABLE_NAME }}.exe
         generate_release_notes: true
 
     - name: Compress (Linux/macOS)
       if: matrix.os != 'windows-latest'
       run: |
-        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z build/bin
+        7z a -t7z -m0=lzma2 -mx=9 -mfb=64 -md=32m -ms=on ${{ env.PROJECT_NAME }}_${{ matrix.qt_host }}_${{ matrix.arch }}.7z build/bin
 
     - name: Upload build artifacts (Linux/macOS)
       if: matrix.os != 'windows-latest'
       uses: actions/upload-artifact@v4
       with:
-        name: NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}
-        path: NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
+        name: ${{ env.PROJECT_NAME }}_${{ matrix.qt_host }}_${{ matrix.arch }}
+        path: ${{ env.PROJECT_NAME }}_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
         compression-level: 0
 
     - name: Release Package (Linux/macOS)
@@ -110,5 +112,5 @@ jobs:
       uses: softprops/action-gh-release@v2
       with:
         files: |
-          ${{github.workspace}}/NetTest_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
+          ${{github.workspace}}/${{ env.PROJECT_NAME }}_${{ matrix.qt_host }}_${{ matrix.arch }}.7z
         generate_release_notes: true
