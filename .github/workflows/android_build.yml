@@ -1,0 +1,66 @@
+name: Compile Qt project for Android
+
+on: push
+
+env:
+  BUILD_TYPE: Release
+  QT_VERSION: '6.8.*'
+  PROJECT_NAME: NetTest
+  EXECUTABLE_NAME: NetTest
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        arch:
+          - android_arm64_v8a
+          - android_armv7
+          - android_x86_64
+          - android_x86
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'adopt'
+        java-version: '17'
+
+    - name: Setup Android SDK
+      uses: android-actions/setup-android@v3
+      with:
+        packages: 'platform-tools platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125'
+
+    - name: Get CMake
+      uses: lukka/get-cmake@latest
+
+    - name: Install Qt
+      uses: jurplel/install-qt-action@v4
+      with:
+        cache: 'true'
+        version: ${{ env.QT_VERSION }}
+        host: 'linux'
+        target: 'android'
+        arch: '${{ matrix.arch }}'
+        modules: 'qtwebsockets'
+
+    - name: Configure CMake
+      run: |
+        cmake -B ${{github.workspace}}/build -S . -G "Ninja" -DCMAKE_BUILD_TYPE=${{ env.BUILD_TYPE }}
+
+    - name: Build
+      run: |
+        cmake --build ${{github.workspace}}/build --config ${{ env.BUILD_TYPE }} --parallel
+
+    - name: check
+      run: |
+        ls -la ${{github.workspace}}
+
+    - name: upload APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ env.PROJECT_NAME }}-${{ matrix.arch }}-${{ env.BUILD_TYPE }}-unsigned.apk
+        path: ${{github.workspace}}/build/android-build-${{ env.EXECUTABLE_NAME }}/build/outputs/apk/release/android-build-NetTest-release-unsigned.apk
