@@ -1,19 +1,27 @@
 #pragma once
 
-#include "DnsResponse.h"
+#include "3rd/dns.hpp"
 
+#include <QByteArray>
+#include <QHostAddress>
 #include <QString>
+#include <optional>
+#include <type_traits>
 
 class DnsParser
 {
 public:
     DnsParser() = delete;
 
-    static DnsResponse parseDnsResponsePacket(const QByteArray &data);
-    static QByteArray createDnsQueryPacket(const QString &domain);
+    static std::optional<dns::DnsMessage> parseDnsResponsePacket(QByteArrayView packet);
+    static QString dnsMessageToString(const dns::DnsMessage &message);
+    static QByteArray buildDnsQueryPacket(const dns::DnsMessage &message);
+    static QByteArray buildDnsQueryPacket(QStringView domain, uint16_t recordType, uint16_t recordClass);
 
 private:
-    static quint16 readUInt16(const QByteArray &data, int offset);
-    static quint16 readUInt32(const QByteArray &data, int offset);
-    static bool writeQName(QDataStream &stream, const QString &domain);
+    template <typename T,
+              typename = std::enable_if_t<std::is_same_v<typename T::value_type, std::byte>>>
+    static QByteArray vectorToQByteArray(const T &data);
+    static std::vector<std::byte> QByteArrayToVector(QByteArrayView packet);
+    static QHostAddress vectorToQHostAddress(const std::array<std::byte, 16> &data);
 };

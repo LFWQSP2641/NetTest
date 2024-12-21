@@ -1,185 +1,142 @@
 #include "DnsParser.h"
 
-#include <QDebug>
-#include <QHostAddress>
-#include <QObject>
 #include <QRandomGenerator>
-#include <QUrl>
 
-DnsResponse DnsParser::parseDnsResponsePacket(const QByteArray &data)
+std::optional<dns::DnsMessage> DnsParser::parseDnsResponsePacket(QByteArrayView packet)
 {
-    DnsResponse response;
+    std::vector<std::byte> responseData(QByteArrayToVector(packet));
 
-    if (data.size() < 12)
-    {
-        response.transactionId = QObject::tr("Invalid DNS response packet");
-        return response;
-    }
+    const auto *responsePtr = reinterpret_cast<const uint8_t *>(responseData.data());
+    const auto responseSize = responseData.size();
 
-    // 读取头部字段
-    response.transactionId = QString::number(readUInt16(data, 0));
-    response.flags = QString("%1").arg(readUInt16(data, 2), 4, 16, QLatin1Char('0'));
-    quint16 questions = readUInt16(data, 4);
-    quint16 answerRRs = readUInt16(data, 6);
-
-    // 解析问题部分
-    int pos = 12;
-    for (int i = 0; i < questions; ++i)
-    {
-        QString domainName;
-        while (true)
-        {
-            if (pos >= data.size())
-                return response;
-
-            quint8 length = static_cast<quint8>(data[pos]);
-            pos++;
-            if (length == 0)
-                break;
-
-            if ((length & 0xC0) == 0xC0)
-            {
-                quint16 pointer = ((length & 0x3F) << 8) | static_cast<quint8>(data[pos]);
-                pos++;
-                // 在需要时实现指针解压
-                domainName += QObject::tr("Compression not supported");
-                break;
-            }
-            else
-            {
-                domainName.append(QString::fromLatin1(data.mid(pos, length)));
-                domainName.append(".");
-                pos += length;
-            }
-        }
-        domainName.chop(1); // 移除最后的点
-        response.questions.append(domainName);
-
-        if (pos + 4 > data.size())
-            return response;
-        pos += 4; // 跳过类型和类
-    }
-
-    // 解析回答部分
-    for (int i = 0; i < answerRRs; ++i)
-    {
-        if (pos + 12 > data.size())
-            return response;
-
-        QString domainName = QObject::tr("Compressed or raw domain");
-        quint16 type = readUInt16(data, pos + 2);
-        quint16 dataLength = readUInt16(data, pos + 10);
-        pos += 12;
-
-        if (type == 1 && dataLength == 4) // IPv4 地址
-        {
-            QByteArray rawIpData = data.mid(pos, dataLength);
-            QString ipv4Address = QString("%1.%2.%3.%4")
-                                      .arg(static_cast<quint8>(rawIpData[0]))
-                                      .arg(static_cast<quint8>(rawIpData[1]))
-                                      .arg(static_cast<quint8>(rawIpData[2]))
-                                      .arg(static_cast<quint8>(rawIpData[3]));
-            response.answers.append({ domainName, "A", ipv4Address });
-        }
-        else
-        {
-            response.answers.append({ domainName, QString("Type %1").arg(type), QObject::tr("Unsupported or invalid") });
-        }
-
-        pos += dataLength;
-    }
-
+    auto response = dns::Parse(responsePtr, responseSize);
     return response;
 }
 
-QByteArray DnsParser::createDnsQueryPacket(const QString &domain)
+QString DnsParser::dnsMessageToString(const dns::DnsMessage &message)
 {
-    QByteArray packet;
+    QString result;
 
-    // 生成随机 Transaction ID
-    const quint16 transactionId = QRandomGenerator::global()->generate() & 0xFFFF;
+    std::vector<dns::DnsAnswer> answers;
 
-    QDataStream stream(&packet, QDataStream::WriteOnly);
-    stream.setByteOrder(QDataStream::BigEndian);
+    answers = message.answers;
+    answers.insert(answers.end(), message.authorityAnswers.begin(), message.authorityAnswers.end());
+    answers.insert(answers.end(), message.additionalAnswers.begin(), message.additionalAnswers.end());
 
-    // Transaction ID
-    stream << transactionId;
-
-    // Flags (标准查询)
-    stream << quint16{ 0x0100 };
-
-    // Questions (1 个问题)
-    stream << quint16{ 1 };
-
-    // Answer RRs, Authority RRs, Additional RRs (都设置为 0)
-    stream << quint16{ 0 } << quint16{ 0 } << quint16{ 0 };
-
-    // QNAME (使用 Punycode 编码主机名)
-    QUrl url("http://" + domain); // 使用 QUrl 处理域名
-    if (!url.isValid())
+    // print answers
+    for (const auto &answer : answers)
     {
-        qWarning() << QObject::tr("Invalid domain name:") << domain;
-        return QByteArray();
-    }
-
-    QString punycodeHost = url.host(QUrl::FullyEncoded); // 获取 Punycode 编码后的主机名
-
-    if (!writeQName(stream, punycodeHost))
-    {
-        qWarning() << QObject::tr("Failed to write QNAME");
-        return QByteArray();
-    }
-
-    // QTYPE (A 记录)
-    stream << quint16{ 0x0001 };
-
-    // QCLASS (IN，表示 Internet)
-    stream << quint16{ 0x0001 };
-
-    return packet;
-}
-
-quint16 DnsParser::readUInt16(const QByteArray &data, int offset)
-{
-    if (offset + 1 >= data.size())
-    {
-        qWarning() << QObject::tr("readUInt16: Offset out of bounds");
-        return 0;
-    }
-    return (static_cast<quint16>(data[offset]) << 8) | static_cast<quint16>(data[offset + 1]);
-}
-
-quint16 DnsParser::readUInt32(const QByteArray &data, int offset)
-{
-    if (offset + 4 > data.size())
-    {
-        qWarning() << QObject::tr("readUInt32: Offset out of bounds");
-        return 0;
-    }
-    return (static_cast<quint32>(static_cast<quint8>(data[offset])) << 24) |
-           (static_cast<quint32>(static_cast<quint8>(data[offset + 1])) << 16) |
-           (static_cast<quint32>(static_cast<quint8>(data[offset + 2])) << 8) |
-           static_cast<quint32>(static_cast<quint8>(data[offset + 3]));
-}
-
-bool DnsParser::writeQName(QDataStream &stream, const QString &domain)
-{
-    const QStringList parts = domain.split('.', Qt::SkipEmptyParts);
-    for (const QString &part : parts)
-    {
-        if (part.isEmpty())
+        result.append(QObject::tr("Answer:")).append(QString::fromStdString(answer.name)).append(QStringLiteral("ttl:")).append(QString::number(answer.ttl));
+        result.append(QStringLiteral("\n"));
+        if (auto a = std::get_if<dns::AData>(&answer.value))
         {
-            return false; // 域名部分不能为空
+            result.append(QStringLiteral("A:")).append(QHostAddress{ *a }.toString());
         }
-        QByteArray encodedPart = part.toLatin1(); // 使用 Latin1 编码，更符合 DNS 协议
-        if (encodedPart.size() > 255)
+        else if (auto aaaa = std::get_if<dns::AAAAData>(&answer.value))
         {
-            qWarning() << QObject::tr("Domain part too long: ") << part;
-            return false;
+            result.append(QStringLiteral("AAAA:")).append(vectorToQHostAddress(*aaaa).toString());
         }
-        stream << quint8(encodedPart.size());
-        stream.writeRawData(encodedPart.constData(), encodedPart.size());
+        else if (auto mx = std::get_if<dns::MXData>(&answer.value))
+        {
+            result.append(QStringLiteral("MX:")).append(QString::fromStdString(mx->exchange));
+        }
+        else if (auto ptr = std::get_if<dns::PTRData>(&answer.value))
+        {
+            result.append(QStringLiteral("PTR:")).append(QString::fromStdString(*ptr));
+        }
+        else if (auto txt = std::get_if<dns::TXTData>(&answer.value))
+        {
+            result.append(QStringLiteral("TXT:")).append(QString::fromStdString(txt->txt));
+        }
+        else if (auto soa = std::get_if<dns::SOAData>(&answer.value))
+        {
+            result.append(QStringLiteral("SOA:"))
+                .append(QObject::tr("PrimaryServer:"))
+                .append(soa->primaryServer)
+                .append(QObject::tr("Administrator:"))
+                .append(soa->administrator)
+                .append(QObject::tr("SerialNo:"))
+                .append(QString::number(soa->serialNo))
+                .append(QObject::tr("Refresh:"))
+                .append(QString::number(soa->refresh))
+                .append(QObject::tr("Retry:"))
+                .append(QString::number(soa->retry))
+                .append(QObject::tr("Expire:"))
+                .append(QString::number(soa->expire))
+                .append(QObject::tr("DefaultTtl:"))
+                .append(QString::number(soa->defaultTtl));
+        }
+        else
+        {
+            result.append(QObject::tr("Unknown record type"));
+        }
+        result.append(QStringLiteral("\n"));
     }
-    stream << quint8(0);
-    return true;
+
+    if (answers.empty())
+    {
+        result.append("No answers found");
+        result.append(QStringLiteral("\n"));
+    }
+
+    return result;
+}
+
+QByteArray DnsParser::buildDnsQueryPacket(const dns::DnsMessage &message)
+{
+    std::vector<std::byte> data = dns::Build(message);
+    return vectorToQByteArray(data);
+}
+
+QByteArray DnsParser::buildDnsQueryPacket(QStringView domain, uint16_t recordType, uint16_t recordClass)
+{
+    dns::DnsHeaderVars headerVars;
+    headerVars.xid = QRandomGenerator::global()->generate() & 0xFFFF;
+    headerVars.recursionDesired = 1;
+    headerVars.opcode = 0;
+    headerVars.isResponse = 0;
+    headerVars.responseCode = 0;
+    headerVars.checkingDisabled = 0;
+    headerVars.authenticatedData = 0;
+    headerVars.reserved = 0;
+    headerVars.recursionAvailable = 0;
+    headerVars.truncation = 0;
+    headerVars.authoritative = 0;
+
+    dns::DnsQuestion question;
+    question.name = domain.toString().toStdString();
+    question.type = recordType;
+    question.cls = recordClass;
+
+    dns::DnsMessage message;
+    message.dnsHead = headerVars;
+    message.questions.push_back(question);
+
+    return buildDnsQueryPacket(message);
+}
+
+template <typename T, typename T2>
+QByteArray DnsParser::vectorToQByteArray(const T &data)
+{
+    return QByteArray(
+        reinterpret_cast<const char *>(data.data()),
+        static_cast<qsizetype>(data.size() * sizeof(std::byte)));
+}
+
+std::vector<std::byte> DnsParser::QByteArrayToVector(QByteArrayView packet)
+{
+    return std::vector<std::byte>(
+        reinterpret_cast<const std::byte *>(packet.data()),
+        reinterpret_cast<const std::byte *>(packet.data() + packet.size()));
+}
+
+QHostAddress DnsParser::vectorToQHostAddress(const std::array<std::byte, 16> &data)
+{
+    // to Q_IPV6ADDR
+    Q_IPV6ADDR ipv6;
+    for (int i = 0; i < 16; ++i)
+    {
+        ipv6[i] = static_cast<quint8>(data[i]);
+    }
+    return QHostAddress(ipv6);
 }

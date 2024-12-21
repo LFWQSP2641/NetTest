@@ -31,6 +31,8 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: 'recursive'
 
     - name: Get CMake
       uses: lukka/get-cmake@latest

@@ -14,10 +14,54 @@ Item {
             font.bold: true
         }
         // 域名
-        TextField {
-            id: domainTextField
+        RowLayout {
             Layout.fillWidth: true
-            placeholderText: qsTr("Domain")
+            TextField {
+                id: domainTextField
+                Layout.fillWidth: true
+                placeholderText: qsTr("Domain")
+            }
+            ComboBox {
+                id: typeComboBox
+                Layout.fillWidth: true
+                textRole: "text"
+                valueRole: "enumValue"
+                model: ListModel {
+                    ListElement { text: "A"; enumValue: 1 }
+                    ListElement { text: "AAAA"; enumValue: 28 }
+                    ListElement { text: "NS"; enumValue: 2 }
+                    ListElement { text: "CNAME"; enumValue: 5 }
+                    ListElement { text: "SOA"; enumValue: 6 }
+                    ListElement { text: "PTR"; enumValue: 12 }
+                    ListElement { text: "MX"; enumValue: 15 }
+                    ListElement { text: "TXT"; enumValue: 16 }
+                    ListElement { text: "SPF"; enumValue: 99 }
+                }
+                currentIndex: 0
+                onCurrentValueChanged: {
+                    console.log("recordType: " + typeComboBox.currentValue)
+                    dnsQueryPage.dnsQueryObject.recordType = typeComboBox.currentValue
+                }
+            }
+            ComboBox {
+                id: classComboBox
+                Layout.fillWidth: true
+                textRole: "text"
+                valueRole: "enumValue"
+                model: ListModel {
+                    ListElement { text: "INTERNET"; enumValue: 1 }
+                    ListElement { text: "CSNET"; enumValue: 2 }
+                    ListElement { text: "CHAOS"; enumValue: 3 }
+                    ListElement { text: "HESIOD"; enumValue: 4 }
+                    ListElement { text: "NONE"; enumValue: 254 }
+                    ListElement { text: "ANY"; enumValue: 255 }
+                }
+                currentIndex: 0
+                onCurrentIndexChanged: {
+                    console.log("recordClass: " + classComboBox.currentValue)
+                    dnsQueryPage.dnsQueryObject.recordClass = classComboBox.currentValue
+                }
+            }
         }
         // dns服务器
         RowLayout {
@@ -111,13 +155,13 @@ Item {
             console.log(dnsQueryPage.type + " Server Tip: " + tip)
             dnsQueryPage.outputTipMessage(tip)
         }
-        // function onReceivedData(str, hexEncode) {
-        //     let message = str + "\n" + qsTr("hex encode: ") + hexEncode
-        //     console.log(dnsQueryPage.type + " Server Received: " + message)
-        //     dnsQueryPage.outputReceivedMessage(message)
-        // }
-        function onLookupFinished(domain, ip, timeMs) {
-            let message = qsTr("Lookup domain: ") + domain + "\n" + qsTr("IP: ") + ip + "\n" + qsTr("Time: ") + timeMs + "ms"
+        function onReceivedData(str, hexEncode) {
+            let message = qsTr("ReceivedData hex encode: ") + hexEncode
+            console.log(dnsQueryPage.type + " Server Received: " + message)
+            dnsQueryPage.outputReceivedMessage(message)
+        }
+        function onLookupFinished(domain, result, timeMs) {
+            let message = qsTr("Lookup domain: ") + domain + "\n" + qsTr("Result: ") + result + "\n" + qsTr("Time: ") + timeMs + "ms"
             console.log(dnsQueryPage.type + " Server Lookup Finished: " + message)
             resultTextArea.output(message)
         }

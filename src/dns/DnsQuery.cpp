@@ -3,7 +3,6 @@
 #include "DnsParser.h"
 
 #include <QDateTime>
-#include <QRandomGenerator>
 
 DnsQuery::DnsQuery(QObject *parent)
     : QObject{ parent },
@@ -34,7 +33,7 @@ void DnsQuery::query(const QString &domain, const QString &dnsServer, quint16 po
         m_socket->connectToHost(dnsServer, port);
         m_dnsServer = dnsServer;
     }
-    m_socket->write(DnsParser::createDnsQueryPacket(domain));
+    m_socket->write(DnsParser::buildDnsQueryPacket(domain, recordType, recordClass));
 }
 
 void DnsQuery::onReadyRead()
@@ -49,8 +48,39 @@ void DnsQuery::onReadyRead()
         quint16 senderPort;
         m_socket->readDatagram(data.data(), data.size(), &sender, &senderPort);
         emit tip(QObject::tr("Received data from ").append(sender.toString()).append(QStringLiteral(":")).append(QString::number(senderPort)));
-        emit receivedData(data);
+        emit receivedData(QString(data), data.toHex(), data);
         const auto response = DnsParser::parseDnsResponsePacket(data);
-        emit lookupFinished(m_domain, response.answers.isEmpty() ? "" : response.answers.first().value, elapsedTime);
+        if (!response)
+        {
+            emit error(QObject::tr("Failed to parse DNS response"));
+            return;
+        }
+        emit lookupFinished(m_domain, DnsParser::dnsMessageToString(response.value()), elapsedTime);
     }
+}
+
+DnsQuery::RecordClass DnsQuery::getRecordClass() const
+{
+    return recordClass;
+}
+
+void DnsQuery::setRecordClass(DnsQuery::RecordClass newRecordClass)
+{
+    if (recordClass == newRecordClass)
+        return;
+    recordClass = newRecordClass;
+    emit recordClassChanged();
+}
+
+DnsQuery::RecordType DnsQuery::getRecordType() const
+{
+    return recordType;
+}
+
+void DnsQuery::setRecordType(DnsQuery::RecordType newRecordType)
+{
+    if (recordType == newRecordType)
+        return;
+    recordType = newRecordType;
+    emit recordTypeChanged();
 }

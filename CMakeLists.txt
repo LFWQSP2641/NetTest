@@ -37,7 +37,7 @@ qt_add_qml_module(${PROJECT_NAME}
     QML_FILES page/MainPage.qml page/DNSQueryPage.qml
     RESOURCES android/AndroidManifest.xml android/build.gradle android/res/values/libs.xml android/res/xml/qtprovider_paths.xml android/gradle/wrapper/gradle-wrapper.jar android/gradle/wrapper/gradle-wrapper.properties android/gradle.properties android/gradlew android/gradlew.bat
     SOURCES src/Settings.h src/Settings.cpp
-    SOURCES src/dns/DnsResponse.h src/dns/DnsResponse.cpp
+    SOURCES 3rd/dns.hpp
 )
 
 qt_add_resources(${PROJECT_NAME} "qml"

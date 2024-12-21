@@ -92,8 +92,6 @@ Item {
             Layout.fillWidth: true
             Layout.fillHeight: true
             title: qsTr("DNS Query")
-            // 目前仅支持A记录
-            description: qsTr("Currently only supports A records")
             function clickFunction() {
                 mainPage.clicked(7)
             }

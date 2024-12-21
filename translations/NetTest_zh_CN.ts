@@ -57,56 +57,61 @@
         <translation>DNS查询</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="20"/>
+        <location filename="../page/DNSQueryPage.qml" line="22"/>
         <source>Domain</source>
         <translation>域名</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="28"/>
+        <location filename="../page/DNSQueryPage.qml" line="72"/>
         <source>DNS Server</source>
         <translation>DNS服务器</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="34"/>
+        <location filename="../page/DNSQueryPage.qml" line="78"/>
         <source>Port</source>
         <translation>端口</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="44"/>
+        <location filename="../page/DNSQueryPage.qml" line="88"/>
         <source>Query</source>
         <translation>查询</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="93"/>
+        <location filename="../page/DNSQueryPage.qml" line="137"/>
         <source>error:</source>
         <translation>错误：</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="97"/>
+        <location filename="../page/DNSQueryPage.qml" line="141"/>
         <source>Tip:</source>
         <translation>提示：</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="101"/>
+        <location filename="../page/DNSQueryPage.qml" line="145"/>
         <source>Received:</source>
         <translation>接收：</translation>
+    </message>
+    <message>
+        <location filename="../page/DNSQueryPage.qml" line="159"/>
+        <source>ReceivedData hex encode: </source>
+        <translation>接收数据 hex 编码：</translation>
+    </message>
+    <message>
+        <location filename="../page/DNSQueryPage.qml" line="164"/>
+        <source>Result: </source>
+        <translation>结果：</translation>
     </message>
     <message>
         <source>hex encode: </source>
         <translation type="obsolete">hex编码：</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="120"/>
+        <location filename="../page/DNSQueryPage.qml" line="164"/>
         <source>Lookup domain: </source>
         <translation>查询域名：</translation>
     </message>
     <message>
-        <location filename="../page/DNSQueryPage.qml" line="120"/>
-        <source>IP: </source>
-        <translation></translation>
-    </message>
-    <message>
-        <location filename="../page/DNSQueryPage.qml" line="120"/>
+        <location filename="../page/DNSQueryPage.qml" line="164"/>
         <source>Time: </source>
         <translation>耗时：</translation>
     </message>
@@ -240,9 +245,8 @@
         <translation>DNS查询</translation>
     </message>
     <message>
-        <location filename="../page/MainPage.qml" line="96"/>
         <source>Currently only supports A records</source>
-        <translation>目前仅支持A记录</translation>
+        <translation type="vanished">目前仅支持A记录</translation>
     </message>
 </context>
 <context>
@@ -292,14 +296,13 @@
     </message>
     <message>
         <location filename="../src/udp/UdpServer.cpp" line="48"/>
-        <location filename="../src/dns/DnsQuery.cpp" line="51"/>
+        <location filename="../src/dns/DnsQuery.cpp" line="50"/>
         <source>Received data from </source>
         <translation>收到数据包来自 </translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="15"/>
         <source>Invalid DNS response packet</source>
-        <translation>DNS 响应包无效</translation>
+        <translation type="vanished">DNS 响应包无效</translation>
     </message>
     <message>
         <source>Transaction ID: %1
@@ -344,48 +347,40 @@ Additional RRs: %6
 </translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="45"/>
         <source>Compression not supported</source>
-        <translation>不支持压缩</translation>
+        <translation type="vanished">不支持压缩</translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="69"/>
         <source>Compressed or raw domain</source>
-        <translation>压缩域名或原始域名</translation>
+        <translation type="vanished">压缩域名或原始域名</translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="86"/>
         <source>Unsupported or invalid</source>
-        <translation>不支持或无效</translation>
+        <translation type="vanished">不支持或无效</translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="121"/>
         <source>Invalid domain name:</source>
-        <translation>无效的域名：</translation>
+        <translation type="vanished">无效的域名：</translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="129"/>
         <source>Failed to write QNAME</source>
-        <translation>QNAME 写入错误</translation>
+        <translation type="vanished">QNAME 写入错误</translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="146"/>
         <source>readUInt16: Offset out of bounds</source>
-        <translation>readUInt16：偏移量超出范围</translation>
+        <translation type="vanished">readUInt16：偏移量超出范围</translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="156"/>
         <source>readUInt32: Offset out of bounds</source>
-        <translation>readUInt32：偏移量超出范围</translation>
+        <translation type="vanished">readUInt32：偏移量超出范围</translation>
     </message>
     <message>
         <source>Offset out of bounds</source>
         <translation type="vanished">偏移量越界</translation>
     </message>
     <message>
-        <location filename="../src/dns/DnsParser.cpp" line="177"/>
         <source>Domain part too long: </source>
-        <translation>域名部分过长:</translation>
+        <translation type="vanished">域名部分过长:</translation>
     </message>
     <message>
         <location filename="../src/WebSocket/WebSocketServer.cpp" line="21"/>
@@ -436,6 +431,56 @@ Additional RRs: %6
         <location filename="../src/WebSocket/WebSocketClient.cpp" line="69"/>
         <source>WebSocket error occurred: </source>
         <translation>WebSocket 发生错误：</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsQuery.cpp" line="55"/>
+        <source>Failed to parse DNS response</source>
+        <translation>解析 DNS 响应失败</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="29"/>
+        <source>Answer:</source>
+        <translation>应答：</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="54"/>
+        <source>PrimaryServer:</source>
+        <translation>主服务器：</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="56"/>
+        <source>Administrator:</source>
+        <translation>管理员:</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="58"/>
+        <source>SerialNo:</source>
+        <translation>序列号：</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="60"/>
+        <source>Refresh:</source>
+        <translation>刷新：</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="62"/>
+        <source>Retry:</source>
+        <translation>重试：</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="64"/>
+        <source>Expire:</source>
+        <translation>过期失效：</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="66"/>
+        <source>DefaultTtl:</source>
+        <translation>默认Ttl：</translation>
+    </message>
+    <message>
+        <location filename="../src/dns/DnsParser.cpp" line="71"/>
+        <source>Unknown record type</source>
+        <translation>未知记录类型</translation>
     </message>
 </context>
 <context>
