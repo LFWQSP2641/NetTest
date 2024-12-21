@@ -1,6 +1,6 @@
 #pragma once
 
-#include "3rd/dns.hpp"
+#include "3rd/dnspacket/dns.hpp"
 
 #include <QByteArray>
 #include <QHostAddress>

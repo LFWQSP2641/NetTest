@@ -1,3 +1,3 @@
-[submodule "3rd"]
-	path = 3rd
+[submodule "3rd/dnspacket"]
+	path = 3rd/dnspacket
 	url = https://github.com/LFWQSP2641/libdnspacket.git
