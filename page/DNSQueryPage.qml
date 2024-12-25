@@ -57,7 +57,7 @@ Item {
                     ListElement { text: "ANY"; enumValue: 255 }
                 }
                 currentIndex: 0
-                onCurrentIndexChanged: {
+                onCurrentValueChanged: {
                     console.log("recordClass: " + classComboBox.currentValue)
                     dnsQueryPage.dnsQueryObject.recordClass = classComboBox.currentValue
                 }
