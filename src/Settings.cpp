@@ -4,11 +4,12 @@
 
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <QNetworkProxy>
 
 Settings *Settings::instance = nullptr;
 
 Settings::Settings(QObject *parent)
-    : QObject{ parent }
+    : QObject {parent}
 {
     // 读取设置
     QFile file(Global::configPath().append(QStringLiteral("/settings.json")));
@@ -19,6 +20,8 @@ Settings::Settings(QObject *parent)
         m_font = settings.value(QStringLiteral("font")).toString();
         m_fontPointSize = settings.value(QStringLiteral("fontPointSize")).toInt();
         m_style = settings.value(QStringLiteral("style")).toString();
+        m_proxyHost = settings.value(QStringLiteral("proxyHost")).toString();
+        m_proxyPort = settings.value(QStringLiteral("proxyPort")).toInt();
     }
     file.close();
 }
@@ -48,6 +51,11 @@ void Settings::destroyInstance()
         delete instance;
         instance = nullptr;
     }
+}
+
+bool Settings::isProxyAvailable() const
+{
+    return !m_proxyHost.isEmpty() && m_proxyPort > 0;
 }
 
 QString Settings::font() const
@@ -89,6 +97,32 @@ void Settings::setStyle(const QString &newStyle)
     emit styleChanged();
 }
 
+QString Settings::proxyHost() const
+{
+    return m_proxyHost;
+}
+
+void Settings::setProxyHost(const QString &newProxyHost)
+{
+    if (m_proxyHost == newProxyHost)
+        return;
+    m_proxyHost = newProxyHost;
+    emit proxyHostChanged();
+}
+
+int Settings::proxyPort() const
+{
+    return m_proxyPort;
+}
+
+void Settings::setProxyPort(int newProxyPort)
+{
+    if (m_proxyPort == newProxyPort)
+        return;
+    m_proxyPort = newProxyPort;
+    emit proxyPortChanged();
+}
+
 void Settings::saveSettings() const
 {
     // JSON格式保存设置
@@ -96,6 +130,8 @@ void Settings::saveSettings() const
     settings.insert(QStringLiteral("font"), m_font);
     settings.insert(QStringLiteral("fontPointSize"), m_fontPointSize);
     settings.insert(QStringLiteral("style"), m_style);
+    settings.insert(QStringLiteral("proxyHost"), m_proxyHost);
+    settings.insert(QStringLiteral("proxyPort"), m_proxyPort);
     QFile file(Global::configPath().append(QStringLiteral("/settings.json")));
     if (file.open(QIODevice::WriteOnly))
     {
@@ -103,4 +139,16 @@ void Settings::saveSettings() const
         file.write(doc.toJson(QJsonDocument::Compact));
     }
     file.close();
+    if (isProxyAvailable())
+    {
+        QNetworkProxy proxy;
+        proxy.setType(QNetworkProxy::Socks5Proxy);
+        proxy.setHostName(m_proxyHost);
+        proxy.setPort(m_proxyPort);
+        QNetworkProxy::setApplicationProxy(proxy);
+    }
+    else
+    {
+        QNetworkProxy::setApplicationProxy(QNetworkProxy());
+    }
 }

@@ -47,23 +47,31 @@ int main(int argc, char *argv[])
         settings->setStyle(QQuickStyle::name());
 
     QNetworkProxyFactory::setUseSystemConfiguration(false);
+    if (settings->isProxyAvailable())
+    {
+        QNetworkProxy proxy;
+        proxy.setType(QNetworkProxy::Socks5Proxy);
+        proxy.setHostName(settings->proxyHost());
+        proxy.setPort(settings->proxyPort());
+        QNetworkProxy::setApplicationProxy(proxy);
+    }
 
     // 获取系统语言
     QString systemLanguage = QLocale::system().name();
     qDebug() << "System Language:" << systemLanguage;
 
     // 创建翻译器
-    QTranslator *translator = new QTranslator;
+    QTranslator translator;
 
     // 如果语言是中文
     if (systemLanguage == QStringLiteral("zh_CN"))
     {
-        bool loaded = translator->load(":/NetTest_zh_CN.qm");
+        bool loaded = translator.load(":/NetTest_zh_CN.qm");
         qDebug() << "Translation loaded:" << loaded;
 
         if (loaded)
         {
-            app.installTranslator(translator);
+            app.installTranslator(&translator);
         }
     }
 
@@ -83,11 +91,12 @@ int main(int argc, char *argv[])
         &QQmlApplicationEngine::objectCreationFailed,
         &app,
         []()
-        { QCoreApplication::exit(-1); },
+    {
+        QCoreApplication::exit(-1);
+    },
         Qt::QueuedConnection);
 
-    QStringList builtInStyles = { QStringLiteral("Basic"), QStringLiteral("Fusion"),
-                                  QStringLiteral("Imagine"), QStringLiteral("Material"), QStringLiteral("Universal") };
+    QStringList builtInStyles = {QStringLiteral("Basic"), QStringLiteral("Fusion"), QStringLiteral("Imagine"), QStringLiteral("Material"), QStringLiteral("Universal")};
 #if defined(Q_OS_MACOS)
     builtInStyles << QStringLiteral("macOS");
     builtInStyles << QStringLiteral("iOS");

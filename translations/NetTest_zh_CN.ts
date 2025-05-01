@@ -142,67 +142,72 @@
     </message>
     <message>
         <location filename="../page/Main.qml" line="80"/>
-        <location filename="../page/Main.qml" line="170"/>
+        <location filename="../page/Main.qml" line="193"/>
         <source>About</source>
         <translation>关于</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="112"/>
+        <location filename="../page/Main.qml" line="116"/>
         <source>Appearance(required restart)</source>
         <translation>外观（需要重启）</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="118"/>
+        <location filename="../page/Main.qml" line="122"/>
         <source>Theme</source>
         <translation>主题</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="135"/>
+        <location filename="../page/Main.qml" line="139"/>
         <source>Font</source>
         <translation>字体</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="182"/>
+        <location filename="../page/Main.qml" line="167"/>
+        <source>Socks5 Proxy</source>
+        <translation>Socks5 代理</translation>
+    </message>
+    <message>
+        <location filename="../page/Main.qml" line="205"/>
         <source>NetTest is a network testing tool that provides a simple interface for testing various network protocols.</source>
         <translation>NetTest 是一款网络测试工具，具有简单易用的界面，可用于测试多种网络协议。</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="190"/>
+        <location filename="../page/Main.qml" line="213"/>
         <source>Project Address:</source>
         <translation>项目地址：</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="222"/>
+        <location filename="../page/Main.qml" line="245"/>
         <source>TCP Server</source>
         <translation>TCP 服务端</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="223"/>
+        <location filename="../page/Main.qml" line="246"/>
         <source>TCP Client</source>
         <translation>TCP 客户端</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="224"/>
+        <location filename="../page/Main.qml" line="247"/>
         <source>UDP Server</source>
         <translation>UDP 服务端</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="225"/>
+        <location filename="../page/Main.qml" line="248"/>
         <source>UDP Client</source>
         <translation>UDP 客户端</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="226"/>
+        <location filename="../page/Main.qml" line="249"/>
         <source>WebSocket Server</source>
         <translation>WebSocket 服务端</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="227"/>
+        <location filename="../page/Main.qml" line="250"/>
         <source>WebSocket Client</source>
         <translation>WebSocket 客户端</translation>
     </message>
     <message>
-        <location filename="../page/Main.qml" line="228"/>
+        <location filename="../page/Main.qml" line="251"/>
         <source>DNS Query</source>
         <translation>DNS查询</translation>
     </message>

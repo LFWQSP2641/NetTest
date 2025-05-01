@@ -86,9 +86,7 @@ ApplicationWindow {
 
     Dialog {
         id: settingsDialog
-        x: Math.round((window.width - width) / 2)
-        y: Math.round(window.height / 6)
-        width: Math.min(window.width, window.height) / 3 * 2
+        anchors.centerIn: Overlay.overlay
         modal: true
         focus: true
         title: qsTr("Settings")
@@ -96,12 +94,16 @@ ApplicationWindow {
         onAccepted: {
             Settings.style = styleComboBox.currentText
             Settings.font = fontComboBox.currentText
+            Settings.proxyHost = proxyHostTextField.text
+            Settings.proxyPort = parseInt(proxyPortTextField.text)
             Settings.saveSettings()
             settingsDialog.close()
         }
         onRejected: {
             styleComboBox.currentIndex = styleComboBox.styleIndex
             fontComboBox.currentIndex = fontComboBox.fontIndex
+            proxyHostTextField.text = Settings.proxyHost
+            proxyPortTextField.text = Settings.proxyPort
             settingsDialog.close()
         }
         contentItem: ColumnLayout {
@@ -137,7 +139,7 @@ ApplicationWindow {
                         ComboBox {
                             id: fontComboBox
                             Layout.fillWidth: true
-                            font: fontComboBox.currentText.length == 0 ? undefined : ({ family: fontComboBox.currentText })
+                            font: fontComboBox.currentText.length === 0 ? undefined : ({ family: fontComboBox.currentText })
                             property int fontIndex: -1
                             model: Qt.fontFamilies()
                             delegate: ItemDelegate {
@@ -155,6 +157,25 @@ ApplicationWindow {
                                 if (fontIndex !== -1) {
                                     currentIndex = fontIndex
                                 }
+                            }
+                        }
+                    }
+                    RowLayout {
+                        Label {
+                            text: qsTr("Socks5 Proxy")
+                        }
+                        TextField {
+                            id: proxyHostTextField
+
+                            Component.onCompleted: {
+                                proxyHostTextField.text = Settings.proxyHost
+                            }
+                        }
+                        TextField {
+                            id: proxyPortTextField
+
+                            Component.onCompleted: {
+                                proxyPortTextField.text = Settings.proxyPort
                             }
                         }
                     }
