@@ -20,6 +20,7 @@ Item {
                 id: domainTextField
                 Layout.fillWidth: true
                 placeholderText: qsTr("Domain")
+                text: "www.google.com"
             }
             ComboBox {
                 id: typeComboBox
@@ -70,6 +71,7 @@ Item {
                 id: dnsServerTextField
                 Layout.fillWidth: true
                 placeholderText: qsTr("DNS Server")
+                text: "8.8.8.8"
             }
             // 端口
             TextField {
