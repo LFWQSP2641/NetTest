@@ -5,8 +5,10 @@
 #include <QDateTime>
 
 DnsQuery::DnsQuery(QObject *parent)
-    : QObject{ parent },
-      m_socket{ new QUdpSocket{ this } }
+    : QObject {parent},
+      m_socket {new QUdpSocket {this}},
+      m_port(0),
+      m_startTime(0)
 {
     connect(m_socket, &QUdpSocket::readyRead, this, &DnsQuery::onReadyRead);
 }
@@ -21,10 +23,9 @@ DnsQuery::~DnsQuery()
 
 void DnsQuery::query(const QString &domain, const QString &dnsServer, quint16 port)
 {
-    m_port = port;
     m_domain = domain;
     m_startTime = QDateTime::currentMSecsSinceEpoch();
-    if (dnsServer != m_dnsServer)
+    if (dnsServer != m_dnsServer || port != m_port)
     {
         if (!m_dnsServer.isEmpty())
         {
@@ -32,6 +33,7 @@ void DnsQuery::query(const QString &domain, const QString &dnsServer, quint16 po
         }
         m_socket->connectToHost(dnsServer, port);
         m_dnsServer = dnsServer;
+        m_port = port;
     }
     m_socket->write(DnsParser::buildDnsQueryPacket(domain, recordType, recordClass));
 }
