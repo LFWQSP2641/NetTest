@@ -22,8 +22,13 @@ Settings::Settings(QObject *parent)
         m_style = settings.value(QStringLiteral("style")).toString();
         m_proxyHost = settings.value(QStringLiteral("proxyHost")).toString();
         m_proxyPort = settings.value(QStringLiteral("proxyPort")).toInt();
+        file.close();
     }
-    file.close();
+    else
+    {
+        m_fontPointSize = 0;
+        m_proxyPort = 0;
+    }
 }
 
 Settings::~Settings()

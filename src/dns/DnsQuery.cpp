@@ -5,8 +5,8 @@
 #include <QDateTime>
 
 DnsQuery::DnsQuery(QObject *parent)
-    : QObject {parent},
-      m_socket {new QUdpSocket {this}},
+    : QObject(parent),
+      m_socket(new QUdpSocket(this)),
       m_port(0),
       m_startTime(0)
 {
@@ -25,17 +25,27 @@ void DnsQuery::query(const QString &domain, const QString &dnsServer, quint16 po
 {
     m_domain = domain;
     m_startTime = QDateTime::currentMSecsSinceEpoch();
-    if (dnsServer != m_dnsServer || port != m_port)
+
+    if (m_socket->state() != QAbstractSocket::BoundState)
     {
-        if (!m_dnsServer.isEmpty())
+        if (!m_socket->bind(QHostAddress::AnyIPv4, 0)) // 自动分配本地端口
         {
-            m_socket->close();
+            emit error(QObject::tr("Failed to bind UDP socket: %1").arg(m_socket->errorString()));
+            return;
         }
-        m_socket->connectToHost(dnsServer, port);
-        m_dnsServer = dnsServer;
-        m_port = port;
     }
-    m_socket->write(DnsParser::buildDnsQueryPacket(domain, recordType, recordClass));
+
+    m_dnsServer = dnsServer;
+    m_port = port;
+
+    const QByteArray queryPacket = DnsParser::buildDnsQueryPacket(domain, recordType, recordClass);
+    const QHostAddress dnsAddress(dnsServer);
+
+    qint64 sent = m_socket->writeDatagram(queryPacket, dnsAddress, port);
+    if (sent == -1)
+    {
+        emit error(QObject::tr("Failed to send DNS query: %1").arg(m_socket->errorString()));
+    }
 }
 
 void DnsQuery::onReadyRead()
@@ -44,34 +54,26 @@ void DnsQuery::onReadyRead()
     {
         const quint64 currentTime = QDateTime::currentMSecsSinceEpoch();
         const quint64 elapsedTime = currentTime - m_startTime;
+
         QByteArray data;
-        data.resize(m_socket->pendingDatagramSize());
+        data.resize(int(m_socket->pendingDatagramSize()));
+
         QHostAddress sender;
         quint16 senderPort;
         m_socket->readDatagram(data.data(), data.size(), &sender, &senderPort);
-        emit tip(QObject::tr("Received data from ").append(sender.toString()).append(QStringLiteral(":")).append(QString::number(senderPort)));
-        emit receivedData(QString(data), data.toHex(), data);
+
+        emit tip(QObject::tr("Received data from %1:%2").arg(sender.toString()).arg(senderPort));
+        emit receivedData(QString::fromUtf8(data), data.toHex(), data);
+
         const auto response = DnsParser::parseDnsResponsePacket(data);
         if (!response)
         {
             emit error(QObject::tr("Failed to parse DNS response"));
             return;
         }
+
         emit lookupFinished(m_domain, DnsParser::dnsMessageToString(response.value()), elapsedTime);
     }
-}
-
-DnsQuery::RecordClass DnsQuery::getRecordClass() const
-{
-    return recordClass;
-}
-
-void DnsQuery::setRecordClass(DnsQuery::RecordClass newRecordClass)
-{
-    if (recordClass == newRecordClass)
-        return;
-    recordClass = newRecordClass;
-    emit recordClassChanged();
 }
 
 DnsQuery::RecordType DnsQuery::getRecordType() const
@@ -83,6 +85,21 @@ void DnsQuery::setRecordType(DnsQuery::RecordType newRecordType)
 {
     if (recordType == newRecordType)
         return;
+
     recordType = newRecordType;
     emit recordTypeChanged();
+}
+
+DnsQuery::RecordClass DnsQuery::getRecordClass() const
+{
+    return recordClass;
+}
+
+void DnsQuery::setRecordClass(DnsQuery::RecordClass newRecordClass)
+{
+    if (recordClass == newRecordClass)
+        return;
+
+    recordClass = newRecordClass;
+    emit recordClassChanged();
 }
